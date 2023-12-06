@@ -9,17 +9,12 @@ fn vec_to_set(vec: Vec<char>) -> HashSet<char> {
     HashSet::from_iter(vec)
 }
 
-#[derive(Eq, Hash, PartialEq)]
+#[derive(Eq, Hash, PartialEq, Clone)]
 struct Position {
     start: i32,
     end: i32,
     line_number: i32   ,
     value: i32,
-}
-
-struct Star {
-    position: Position,
-    adjacent_numbers: Vec<i32>
 }
 
 
@@ -45,7 +40,7 @@ fn main() {
 
     let mut number_map: Vec<Position> = Vec::new();
     let mut symbol_map: Vec<Position> = Vec::new();
-    let mut star_map: HashMap<Position, Vec<i32>> = HashMap::new();
+    let mut star_map: HashMap<Position, Vec<Position>> = HashMap::new();
 
     let lines = contents.lines(); 
     for (idx, line) in lines.enumerate() {
@@ -103,6 +98,8 @@ fn main() {
         // println!("number val: {}", number.value);
         
         let mut valid_symbols_positions = vec![];
+        let mut valid_star_symbols_positions = vec![];
+
         let mut number_valid = false;
         for n in (number.start - 1)..(number.end + 1) {
             valid_symbols_positions.push(Position{
@@ -130,18 +127,54 @@ fn main() {
             end: number.end +1,
             value: -1
         });
+
+        for n in (number.start )..(number.end - 1) {
+            valid_star_symbols_positions.push(Position{
+                line_number: number.line_number + 1,
+                start: n,
+                end: n + 1,
+                value: -1
+            });
+            valid_star_symbols_positions.push(Position{
+                line_number: number.line_number - 1,
+                start: n,
+                end: n + 1,
+                value: -1
+            })
+        }
+
+        valid_star_symbols_positions.push(Position{
+            line_number: number.line_number,
+            start: number.start -1,
+            end: number.start,
+            value: -1
+        });
+        valid_star_symbols_positions.push(Position{
+            line_number: number.line_number,
+            start: number.end ,
+            end: number.end +1,
+            value: -1
+        });
         for item in valid_symbols_positions {
             if symbol_map.contains(&item) {
                 number_valid = true;
             }
-            match star_map.entry(item) {
-                std::collections::hash_map::Entry::Vacant(e) => { e.insert(vec![number.value]); },
-                std::collections::hash_map::Entry::Occupied(mut e) => { e.get_mut().push(number.value); }
-            }
         }
+
         if number_valid {
             sum += number.value;
         }
+
+
+        for item in valid_star_symbols_positions {
+            let current = number.clone();
+            match star_map.entry(item) {
+                std::collections::hash_map::Entry::Vacant(e) => { e.insert(vec![current]); },
+                std::collections::hash_map::Entry::Occupied(mut e) => { e.get_mut().push(current); }
+            }
+        }
+
+        
     }
 
     println!("sum is {}", sum);
@@ -151,8 +184,12 @@ fn main() {
     for (_key, value) in star_map.into_iter() {
         
         if value.len() == 2 {
-            let gear = value[0] * value[1];
-            gearsum += gear;
+
+            if (value[0].line_number == value[1].line_number) || ((value[0].line_number - value[1].line_number).abs() ==2) {
+
+                let gear = value[0].value * value[1].value;
+                gearsum += gear;
+            }
         }
         
     }
