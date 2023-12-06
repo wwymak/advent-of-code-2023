@@ -1,4 +1,4 @@
-use core::num;
+
 use std::collections::HashSet;
 use std::collections::HashMap;
 use std::iter::FromIterator;
@@ -9,7 +9,7 @@ fn vec_to_set(vec: Vec<char>) -> HashSet<char> {
     HashSet::from_iter(vec)
 }
 
-#[derive(Eq, Hash, PartialEq, Clone)]
+#[derive(Eq, Hash, PartialEq, Clone, Debug)]
 struct Position {
     start: i32,
     end: i32,
@@ -31,7 +31,6 @@ fn main() {
         output_result.push_str(&output);
     });
     output_result.pop();
-    println!("{}", output_result);
 
 
     let re = Regex::new(r"(\d+)").unwrap();
@@ -40,10 +39,11 @@ fn main() {
 
     let mut number_map: Vec<Position> = Vec::new();
     let mut symbol_map: Vec<Position> = Vec::new();
-    let mut star_map: HashMap<Position, Vec<Position>> = HashMap::new();
+    let mut star_map2: HashMap<String, Vec<Position>> = HashMap::new();
 
     let lines = contents.lines(); 
     for (idx, line) in lines.enumerate() {
+
         for cap in re2.captures_iter(line) {
             let index = cap.iter().enumerate()               // skip the first group
                 .find(|t| t.1.is_some())  // find the first `Some`
@@ -66,14 +66,14 @@ fn main() {
                 .find(|t| t.1.is_some())  // find the first `Some`
                 .map(|t| t.0)             // extract the index
                 .unwrap_or(0); 
-            
-            let curr_pos = Position {
-                line_number: idx as i32,
-                start: cap.get(index).unwrap().start() as i32,
-                end: cap.get(index).unwrap().end() as i32,
-                value: -1,
-            };          
-            star_map.insert(curr_pos, vec![]);
+
+            let start = cap.get(index).unwrap().start() as i32;
+            let end = cap.get(index).unwrap().end() as i32;
+
+       
+
+            let v = vec![idx.to_string(), "-".to_string(), start.to_string(),"-".to_string(),  end.to_string()];
+            star_map2.insert(v.concat(), vec![]);
         }
 
         for cap in re.captures_iter(line) {
@@ -91,8 +91,7 @@ fn main() {
             number_map.push(curr_pos);
         }
     }  
-    println!("{}, {}, {}", number_map[0].line_number, number_map[0].start, number_map[0].end);
-    println!("{}, {}, {}", symbol_map[0].line_number, symbol_map[0].start, symbol_map[0].end);
+
     let mut sum = 0;
     for number in number_map {
         // println!("number val: {}", number.value);
@@ -128,7 +127,7 @@ fn main() {
             value: -1
         });
 
-        for n in (number.start )..(number.end - 1) {
+        for n in (number.start -1 )..(number.end + 1) {
             valid_star_symbols_positions.push(Position{
                 line_number: number.line_number + 1,
                 start: n,
@@ -164,14 +163,21 @@ fn main() {
         if number_valid {
             sum += number.value;
         }
-
-
         for item in valid_star_symbols_positions {
             let current = number.clone();
-            match star_map.entry(item) {
-                std::collections::hash_map::Entry::Vacant(e) => { e.insert(vec![current]); },
-                std::collections::hash_map::Entry::Occupied(mut e) => { e.get_mut().push(current); }
+
+            let v = vec![item.line_number.to_string(), "-".to_string(), item.start.to_string(),"-".to_string(),  item.end.to_string()];
+            let test_key: String = v.concat().to_owned();
+
+            if star_map2.contains_key(&test_key) {
+
+                match star_map2.entry(test_key) {
+                    std::collections::hash_map::Entry::Vacant(e) => { e.insert(vec![current]); },
+                    std::collections::hash_map::Entry::Occupied(mut e) => { e.get_mut().push(current); }
+                }
             }
+            
+
         }
 
         
@@ -181,15 +187,12 @@ fn main() {
 
         
     let mut gearsum = 0;
-    for (_key, value) in star_map.into_iter() {
+    for (_key, value) in star_map2.into_iter() {
         
         if value.len() == 2 {
 
-            if (value[0].line_number == value[1].line_number) || ((value[0].line_number - value[1].line_number).abs() ==2) {
-
-                let gear = value[0].value * value[1].value;
-                gearsum += gear;
-            }
+            let gear = value[0].value * value[1].value;
+            gearsum += gear;
         }
         
     }
