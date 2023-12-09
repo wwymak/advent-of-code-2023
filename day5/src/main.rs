@@ -1,5 +1,6 @@
 use std::fs;
 use std::collections::HashMap;
+use std::time::Instant;
 
 
 
@@ -43,16 +44,10 @@ fn hashmap_vals_to_vector(input: &HashMap<i64, i64>) -> Vec<i64> {
 
     return val_vec
 }
-fn main() {
-    let seeds: Vec<i64> = vec![
-        1972667147,
-        405592018, 1450194064, 27782252, 348350443, 61862174, 
-        3911195009, 181169206, 626861593, 138786487, 2886966111 ,
-        275299008, 825403564, 478003391, 514585599, 6102091, 2526020300, 15491453,
-         3211013652, 546191739];
 
+fn get_location_min(seeds: &Vec<i64>) -> i64 {
     let seed_soil = read_map_file(
-        "/home/wwymak/code_experiments/advent_of_code_2023/day5/src/inputs/seed-soil.txt", &seeds);
+        "/home/wwymak/code_experiments/advent_of_code_2023/day5/src/inputs/seed-soil.txt", seeds);
 
     
     let soil_fertise = read_map_file(
@@ -81,5 +76,44 @@ fn main() {
 
     let min_val = hashmap_vals_to_vector(&humidity_location);
 
-    println!("{:?}", min_val.iter().min());
+    return *min_val.iter().min().unwrap();
+
+}
+fn main() {
+    let seeds: Vec<i64> = vec![
+        1972667147,
+        405592018, 1450194064, 27782252, 348350443, 61862174, 
+        3911195009, 181169206, 626861593, 138786487, 2886966111 ,
+        275299008, 825403564, 478003391, 514585599, 6102091, 2526020300, 15491453,
+         3211013652, 546191739];
+
+    let now = Instant::now();
+    println!("q1 min: {:?}", get_location_min(&seeds));
+    let elapsed_time = now.elapsed();
+    println!("Running get_location_min() took {} micros.", elapsed_time.as_micros());
+
+    let mut seeds2:Vec<i64> = Vec::new();
+    let mut seed2_range:Vec<i64> = Vec::new();
+
+    for (idx, s) in seeds.clone().iter().enumerate() {
+        if idx %2 == 1 {
+            seed2_range.push(*s);
+        } else {
+            seeds2.push(*s);
+        }
+    }
+
+    let mut minvals_part2:Vec<i64> = Vec::new();
+
+    // for (idx, s) in seeds2.iter().enumerate() {
+    //     println!("current on iter: {}", idx);
+    //     let range = &seed2_range[idx];
+    //     let maxval = range + s;
+    //     let input_vec: Vec<i64> = Vec::from_iter(*s..maxval);
+    //     minvals_part2.push(get_location_min(&input_vec));
+    // }
+
+    // println!("min val part 2: {}", minvals_part2.iter().min().unwrap());
+
+    
 }
