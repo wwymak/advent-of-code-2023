@@ -1,5 +1,35 @@
 use std::fs;
 use std::collections::HashMap;
+use num::Integer;
+
+fn navigate(directions:&HashMap<&str, Vec<&str>>, instructions: &str, start: &str) -> i32{
+    let mut num_steps = 0;
+
+    let mut current = directions.get(start).unwrap();
+
+    let mut condition_met = false;
+
+    while !condition_met{
+
+        for i in instructions.chars() {
+            let next_key = match i == 'L' {
+                // The arms of a match must cover all the possible values
+                false => current[1],
+                true => current[0],
+                // TODO ^ Try commenting out one of these arms
+            };
+            num_steps += 1;
+            if next_key.ends_with("Z") {
+                condition_met = true;
+                break;
+            }
+            current = directions.get(next_key).unwrap();
+
+        }
+    }
+    num_steps
+}
+
 
 fn navigate_parallel(directions:&HashMap<&str, Vec<&str>>, instructions: &str, start: Vec<&str>) -> i32{
     let mut num_steps = 0;
@@ -12,10 +42,8 @@ fn navigate_parallel(directions:&HashMap<&str, Vec<&str>>, instructions: &str, s
 
         for i in instructions.chars() {
             let next_keys:Vec<&str> = match i == 'L' {
-                // The arms of a match must cover all the possible values
                 false => current.clone().iter().map(|x| x[1]).collect(),
                 true => current.clone().iter().map(|x| x[0]).collect(),
-                // TODO ^ Try commenting out one of these arms
             };
             num_steps += 1;
 
@@ -62,7 +90,17 @@ fn main() {
 
     let starting_points: Vec<&str> = directions.keys().filter(|c| c.ends_with("A")).cloned().collect();
 
-    println!("{:?}", navigate_parallel(&directions, instructions, starting_points));
+    let combos_vec:Vec<i32> = starting_points.iter().map(|x| navigate(&directions, instructions, x)).collect();
+
+    let mut curr_lcm:i128 = combos_vec[0] as i128; 
+
+    for i in 1..combos_vec.len() {
+        curr_lcm = Integer::lcm(&curr_lcm, &(combos_vec[i] as i128));
+    }
+
+    println!("{:?}", curr_lcm);
+
+
 
    
 
