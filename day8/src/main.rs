@@ -1,6 +1,46 @@
 use std::fs;
 use std::collections::HashMap;
 
+fn navigate_parallel(directions:&HashMap<&str, Vec<&str>>, instructions: &str, start: Vec<&str>) -> i32{
+    let mut num_steps = 0;
+
+    let mut current:Vec<Vec<&str>> = start.clone().iter().map(|x| directions.get(x).unwrap().clone()).collect();
+
+    let mut condition_met = false;
+
+    while !condition_met{
+
+        for i in instructions.chars() {
+            let next_keys:Vec<&str> = match i == 'L' {
+                // The arms of a match must cover all the possible values
+                false => current.clone().iter().map(|x| x[1]).collect(),
+                true => current.clone().iter().map(|x| x[0]).collect(),
+                // TODO ^ Try commenting out one of these arms
+            };
+            num_steps += 1;
+
+            // if num_steps % 100_000 == 0 {
+            //     println!("num steps: {}, {:?}", num_steps, next_keys)
+            // }
+            if next_keys.iter().all(|x| x.ends_with("Z")) {
+                condition_met = true;
+                break;
+            }
+            if next_keys.iter().any(|x| x.ends_with("Z")) {
+                println!("num steps: {}, {:?}", num_steps, next_keys);
+            }
+            // if num_steps >= 20659 {
+            //     println!("num steps: {}, {:?}", num_steps, next_keys);
+            //     condition_met = true;
+            //     break;
+            // }
+            current = next_keys.clone().iter().map(|x| directions.get(x).unwrap().clone()).collect();
+
+        }
+    }
+    num_steps
+}
+
 fn main() {
     // let instructions = "RL";
     let instructions = "LRLRLLRRLRRRLRLRRLRLLRRLRRRLRLRLRLRRLRLLRRRLRRRLLRRLRRLRLRRRLLLRRLRLRLRLRLRLLRRRLRLRRRLRRRLRRRLRRRLRRRLRRRLRRRLRRLRRRLLRLLRRLRRLRRLRRRLLRLRRLRLRLRRLLRLRRRLRRLLRLRLRRRLRRLRRLRRLRLLRLRRRLLLRRRLLLLRRLRRRLLLRRLLRLRLRLLLRRRLLRRRLLLRLRRLLRRRLRRRLRLLRRRLRLRLRLLRRLLRRLRRRLRLRRRLRRLRLRRLRRRR";
@@ -18,34 +58,12 @@ fn main() {
         directions.insert(&entries[0], vec![&entries[1], &entries[2]]);
     }
 
+    println!("{:?}", navigate_parallel(&directions, instructions, vec!["AAA"]));
 
-    // println!("{:?}", directions);
+    let starting_points: Vec<&str> = directions.keys().filter(|c| c.ends_with("A")).cloned().collect();
 
-    let mut num_steps = 0;
+    println!("{:?}", navigate_parallel(&directions, instructions, starting_points));
 
-    let mut current = directions.get("AAA").unwrap();
-
-    let mut condition_met = false;
-
-    while !condition_met{
-
-        for i in instructions.chars() {
-            let next_key = match i == 'L' {
-                // The arms of a match must cover all the possible values
-                false => current[1],
-                true => current[0],
-                // TODO ^ Try commenting out one of these arms
-            };
-            num_steps += 1;
-            if next_key == "ZZZ" {
-                condition_met = true;
-                break;
-            }
-            current = directions.get(next_key).unwrap();
-
-        }
-    }
-
-    println!("num_steps {:?}", num_steps);
+   
 
 }
